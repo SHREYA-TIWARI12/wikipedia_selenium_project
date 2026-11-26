@@ -43,13 +43,20 @@ class BasePage:
             self.driver.execute_script("arguments[0].click();", element)
 
     def type(self, locator, text):
-        element = self.wait.until(EC.visibility_of_element_located(locator))
-        # clear() is inconsistent on Wikipedia's progressively enhanced
-        # search input; selecting all works for both native and enhanced inputs.
-        element.send_keys(Keys.CONTROL, "a")
-        element.send_keys(Keys.BACKSPACE)
-        element.send_keys(text)
-        return element
+        # Wikipedia may replace its progressively enhanced search input while
+        # it is being focused. Reacquire it once if that render occurs.
+        for attempt in range(2):
+            try:
+                element = self.wait.until(EC.visibility_of_element_located(locator))
+                # clear() is inconsistent on Wikipedia's progressively enhanced
+                # search input; selecting all works works for both input forms.
+                element.send_keys(Keys.CONTROL, "a")
+                element.send_keys(Keys.BACKSPACE)
+                element.send_keys(text)
+                return element
+            except StaleElementReferenceException:
+                if attempt:
+                    raise
 
     def is_present(self, locator, timeout=5):
         try:
