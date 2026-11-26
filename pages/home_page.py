@@ -42,9 +42,20 @@ class HomePage(BasePage):
 
     def search(self, text):
         self.type(self.SEARCH_INPUT, text)
-        # The input can be replaced after typing; the focused replacement is
-        # the reliable target for submitting the search.
-        self.driver.switch_to.active_element.send_keys(Keys.ENTER)
+        # Wikipedia can replace the input after typing. Resolve the form in
+        # the current DOM and submit it, rather than keeping a WebElement
+        # reference that may already be stale.
+        submitted = self.driver.execute_script(
+            """
+            const input = document.querySelector("input[name='search']");
+            const form = input && input.closest('form');
+            if (!form) return false;
+            form.requestSubmit();
+            return true;
+            """
+        )
+        if not submitted:
+            self.find(self.SEARCH_INPUT).send_keys(Keys.ENTER)
 
     def type_in_search(self, text):
         self.type(self.SEARCH_INPUT, text)
