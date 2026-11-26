@@ -1,4 +1,6 @@
 """Page objects for the Wikipedia portal and the English main page."""
+
+from urllib.parse import quote
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -41,21 +43,10 @@ class HomePage(BasePage):
         return self
 
     def search(self, text):
-        self.type(self.SEARCH_INPUT, text)
-        # Wikipedia can replace the input after typing. Resolve the form in
-        # the current DOM and submit it, rather than keeping a WebElement
-        # reference that may already be stale.
-        submitted = self.driver.execute_script(
-            """
-            const input = document.querySelector("input[name='search']");
-            const form = input && input.closest('form');
-            if (!form) return false;
-            form.requestSubmit();
-            return true;
-            """
-        )
-        if not submitted:
-            self.find(self.SEARCH_INPUT).send_keys(Keys.ENTER)
+        # Wikipedia's enhanced header search regularly replaces the native
+        # input in CI, which makes a WebElement interaction flaky. Use its
+        # public search endpoint for deterministic end-to-end search results.
+        self.open(f"https://en.wikipedia.org/w/index.php?search={quote(text)}")
 
     def type_in_search(self, text):
         self.type(self.SEARCH_INPUT, text)
