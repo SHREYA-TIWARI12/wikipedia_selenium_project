@@ -41,8 +41,10 @@ class HomePage(BasePage):
         return self
 
     def search(self, text):
-        box = self.type(self.SEARCH_INPUT, text)
-        box.send_keys(Keys.ENTER)
+        self.type(self.SEARCH_INPUT, text)
+        # The input can be replaced after typing; the focused replacement is
+        # the reliable target for submitting the search.
+        self.driver.switch_to.active_element.send_keys(Keys.ENTER)
 
     def type_in_search(self, text):
         self.type(self.SEARCH_INPUT, text)
