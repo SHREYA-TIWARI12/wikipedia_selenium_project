@@ -3,7 +3,8 @@ from selenium.webdriver.common.by import By
 
 
 def require_wikimedia_response(driver):
-    """Skip a test when Wikimedia's temporary HTTP 429 page is displayed."""
+    """Skip a test when Wikimedia temporarily rejects an automated request."""
     body_text = driver.find_element(By.TAG_NAME, "body").text.lower()
-    if "too many requests" in body_text:
-        pytest.skip("Wikimedia returned HTTP 429; retry after the rate limit clears")
+    transient_responses = ("too many requests", "wikimedia error")
+    if any(message in body_text for message in transient_responses):
+        pytest.skip("Wikimedia temporarily rejected the automated request")
